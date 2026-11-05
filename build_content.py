@@ -50,14 +50,27 @@ def render(md):
             out.append('<p'+cls+'>'+inline(' '.join(p))+'</p>')
     return '\n'.join(out)
 
-md=(root/'content/python-notes.md').read_text()
-sections=re.split(r'^## ', md, flags=re.M)[1:]
-lessons=[]
-for idx, sec in enumerate(sections):
-    title, body=sec.split('\n',1)
-    title=re.sub(r'^\d+\. ', '',title)
-    lessons.append({'id':str(idx+1), 'title':title, 'html':render(body), 'text':body, 'minutes':[8,8,10,6,8,10,12,7,10,5,7,6,3][idx]})
+def lessons_from(path, prefix, minutes, track):
+    sections=re.split(r'^## ', path.read_text(), flags=re.M)[1:]
+    out=[]
+    for idx, sec in enumerate(sections):
+        title, body=sec.split('\n',1)
+        title=re.sub(r'^\d+\. ', '',title)
+        out.append({
+            'id': f'{prefix}{idx+1}' if prefix else str(idx+1),
+            'title': title,
+            'html': render(body),
+            'text': body,
+            'minutes': minutes[idx],
+            'track': track,
+            'num': idx+1,
+        })
+    return out
+
+lessons = lessons_from(root/'content/python-notes.md', '', [8,8,10,6,12,10,14,12,10,5,7,6,3], 'python')
+lessons += lessons_from(root/'content/interview-notes.md', 'i', [10,8,12,8,8,12,12,8,5,3], 'interview')
 (root/'dist/content.js').write_text('const LESSONS = '+json.dumps(lessons)+';\nconst SCHEDULE = '+json.dumps(render((root/'content/schedule.md').read_text()))+';\n')
 shutil.copy(root/'content/python-notes.md',root/'dist/python-notes.md')
+shutil.copy(root/'content/interview-notes.md',root/'dist/interview-notes.md')
 shutil.copy(root/'content/schedule.md',root/'dist/schedule.md')
 print(f'Built {len(lessons)} lesson sections.')

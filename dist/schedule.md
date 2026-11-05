@@ -20,13 +20,15 @@ For each revision session: 5 minutes recalling yesterday's concepts, 30–40 min
 
 Move on when you can explain the notes' readiness checklist without prompting. If needed, repeat only the weak sections rather than restarting the whole week.
 
+After that checklist, revise **Python for coding interviews** — the standard-library tools used in solutions: sorting, pythonic iteration, lists and 2-D grids, `deque`, hash maps/sets, `heapq`, and `bisect`. Then begin Week 2 problem patterns.
+
 ## Weeks 2–6 — DSA progression
 
 The following is the roadmap; detailed notes and question selection come after the Python revision. Within each topic, revise the concept and implementation first, then introduce practice.
 
 | Week | Fundamentals to revise | Practice phase, when ready |
 |---|---|---|
-| 2 | Big-O time/space; arrays and strings; hash maps/sets; sorting; prefix sums | Arrays/hashing, two pointers, sliding windows |
+| 2 | Interview Python tools, then Big-O, arrays/strings, hash maps/sets, sorting, prefix sums | Arrays/hashing, two pointers, sliding windows |
 | 3 | Stack, queue/`deque`, linked lists, binary search and boundaries | Stack problems, linked-list operations, binary search |
 | 4 | Recursion and call stack; tree traversals; BSTs; heaps/priority queues | DFS/BFS on trees, BST operations, top-k |
 | 5 | Graph representations; visited sets; BFS/DFS; backtracking; topological sorting | Grid/graph traversal, subsets/permutations, dependencies |

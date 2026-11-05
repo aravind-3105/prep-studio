@@ -14,18 +14,18 @@ Then open http://localhost:8000.
 
 ## Features
 
-- 13 searchable Python revision sections, with worked examples and interview traps.
+- 13 searchable Python fundamentals sections and 10 Python-for-interviews sections, with worked examples and interview traps.
 - Revision progress, saved topics, and personal notes per topic.
 - A six-week roadmap with session checkboxes.
 - Optional reveal-and-explain recall cards.
 - JSON progress backup and restore, Markdown downloads, and print/PDF support.
-- Responsive layouts and keyboard accessible controls.
+- Responsive layouts, keyboard accessible controls, and a light/dark theme toggle.
 
-Progress stays in localStorage in your browser. Local and hosted copies have separate progress. Export a backup from the header; import it on the roadmap page. If browser storage is blocked, progress lasts for the session and can still be exported. Progress backups and personal notes are not part of the repository.
+Progress and the theme choice stay in localStorage in your browser. Local and hosted copies have separate progress. Export a backup from the header; import it on the roadmap page. If browser storage is blocked, progress lasts for the session and can still be exported. Progress backups and personal notes are not part of the repository.
 
 ## Edit and rebuild
 
-Edit lesson content in `content/python-notes.md` and the schedule in `content/schedule.md`. Edit the interface in `dist/index.html`, `dist/style.css`, and `dist/app.js`.
+Edit lesson content in `content/python-notes.md` and `content/interview-notes.md`, and the schedule in `content/schedule.md`. Edit the interface in `dist/index.html`, `dist/style.css`, and `dist/app.js`.
 
 ```sh
 python3 build.py
@@ -39,7 +39,7 @@ Python 3 and Node.js are only needed to rebuild and run the checks. The Markdown
 
 ## Scope
 
-Python revision is available now. DSA phases are outlined in the roadmap; detailed DSA lessons, coding exercises, and a code runner are future additions.
+Python fundamentals and Python-for-interviews revision are available now. DSA problem practice, coding exercises, and a code runner are future additions.
 
 ## Repository privacy
 

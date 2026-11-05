@@ -93,7 +93,29 @@ def collect(value, items=None):  # avoid items=[]: shared across calls
     return items
 ```
 
-Useful extras: `*args` collects positional arguments into a tuple; `**kwargs` collects keyword arguments into a dict. `f(*values)` unpacks positional arguments; `f(**options)` unpacks keyword arguments. A small sorting key can use `lambda pair: pair[1]`.
+When `*args` and `**kwargs` are used together, Python separates arguments based on how they are passed into the function.
+
+- Arguments passed without names go into `args` (a tuple).
+- Arguments passed with names go into `kwargs` (a dictionary).
+
+```python
+def employee_info(*args, **kwargs):
+    print("ARGS:", args)
+    print("KWARGS:", kwargs)
+
+employee_info(101, "Alex", "Engineer", age=25, city="Toronto")
+# ARGS: (101, 'Alex', 'Engineer')
+# KWARGS: {'age': 25, 'city': 'Toronto'}
+```
+
+How Python processes that call:
+
+| Incoming argument | Destination | Collected as |
+|---|---|---|
+| `101`, `"Alex"`, `"Engineer"` (no names) | `*args` — positional | `(101, "Alex", "Engineer")` — tuple |
+| `age=25`, `city="Toronto"` (named) | `**kwargs` — keyword | `{"age": 25, "city": "Toronto"}` — dictionary |
+
+`*args` must appear before `**kwargs`. `f(*values)` unpacks positional arguments; `f(**options)` unpacks keyword arguments. A small sorting key can use `lambda pair: pair[1]`.
 
 ## 4. Conditional statements
 
@@ -143,6 +165,106 @@ while remaining > 0:
 - One pass over `n` elements is O(n); all pairs are O(n²). Nested loops are not automatically quadratic: count actual iterations.
 
 **Trap:** `continue` before a `while` loop's counter update can cause an infinite loop.
+
+### `enumerate()` — index + value
+
+- Returns `(index, value)` pairs while iterating.
+- Default index starts at `0`; change it with `start=`.
+- Useful when you need both the element and its position.
+
+```python
+fruits = ["apple", "banana", "cherry"]
+for i, fruit in enumerate(fruits):
+    print(i, fruit)
+# 0 apple
+# 1 banana
+# 2 cherry
+
+list(enumerate(fruits, start=1))
+# [(1, 'apple'), (2, 'banana'), (3, 'cherry')]
+```
+
+### `zip()` — combine multiple iterables
+
+- Pairs corresponding elements from two or more iterables.
+- Returns tuples.
+- Stops at the shortest iterable by default.
+- `strict=True` raises `ValueError` if lengths differ (Python 3.10+).
+
+```python
+names = ["Alex", "Bob"]
+scores = [85, 90]
+list(zip(names, scores))
+# [('Alex', 85), ('Bob', 90)]
+
+for name, score in zip(names, scores):
+    print(name, score)
+```
+
+### `enumerate()` + `zip()` — index + multiple values
+
+```python
+for i, (name, score) in enumerate(zip(names, scores)):
+    print(i, name, score)
+# 0 Alex 85
+# 1 Bob 90
+```
+
+- `zip()` creates `(name, score)` pairs.
+- `enumerate()` adds an index to each pair.
+- Nested unpacking assigns values to `i`, `name`, and `score`.
+
+### Useful tricks
+
+Create a dictionary:
+
+```python
+dict(zip(["a", "b"], [1, 2]))
+# {'a': 1, 'b': 2}
+```
+
+Unzip pairs:
+
+```python
+pairs = [(1, "a"), (2, "b")]
+nums, letters = zip(*pairs)
+# nums = (1, 2)
+# letters = ('a', 'b')
+```
+
+Find an element's index:
+
+```python
+for i, value in enumerate([10, 20, 30]):
+    if value == 20:
+        print(i)  # 1
+```
+
+### Related built-in functions
+
+| Function | Purpose |
+|---|---|
+| `range(n)` | Integers from `0` to `n-1` |
+| `enumerate(x)` | Index + element |
+| `zip(a, b)` | Pair corresponding elements |
+| `reversed(x)` | Iterate backward |
+| `sorted(x)` | Return a sorted list |
+| `sum(x)` | Sum numeric elements |
+| `any(x)` | `True` if at least one is truthy |
+| `all(x)` | `True` if all are truthy |
+
+### Interview cheat sheet
+
+| Requirement | Use |
+|---|---|
+| Need only values | `for x in arr:` |
+| Need index + value | `for i, x in enumerate(arr):` |
+| Need two lists together | `for x, y in zip(a, b):` |
+| Need index + two lists | `for i, (x, y) in enumerate(zip(a, b)):` |
+| Need a dictionary from two lists | `dict(zip(keys, values))` |
+| Need to split pairs into sequences | `a, b = zip(*pairs)` |
+
+Both `enumerate()` and `zip()` return lazy iterators: they generate elements on demand rather than building a full list in memory.
 
 ## 6. Strings
 
@@ -199,38 +321,177 @@ squares = [x * x for x in nums if x > 2]
 ```python
 rows = [[0] * 3] * 2  # both entries reference the same row!
 rows = [[0] * 3 for _ in range(2)]  # independent rows
-
-original = [[1], [2]]
-copy = original.copy()
-copy[0].append(9)     # original also becomes [[1, 9], [2]]
 ```
 
-A shallow copy separates the outer container, but shares nested objects. `copy.deepcopy` recursively copies nested structure when needed.
+### Shallow copy vs deep copy
+
+Start with a list that contains another list: `original = [1, [2, 3]]`.
+
+```python
+import copy
+
+original = [1, [2, 3]]
+shallow_copied = copy.copy(original)      # same as original[:] or original.copy()
+deep_copied = copy.deepcopy(original)
+```
+
+A shallow copy creates a new outer list but reuses the same nested objects. A deep copy recursively duplicates nested structure.
+
+**Modifying the top level:** replacing an element in the copy does not change the original. Both kinds of copy protect `original` here.
+
+```python
+shallow_copied[0] = 99
+# original        -> [1, [2, 3]]      safe
+# shallow_copied  -> [99, [2, 3]]
+```
+
+**Modifying a nested element:** the difference appears when you mutate the inner list.
+
+Shallow copy — shared references. Changing the nested list inside the copy also changes the original:
+
+```python
+shallow_copied[1][0] = "X"
+# original        -> [1, ["X", 3]]    modified
+# shallow_copied  -> [99, ["X", 3]]
+```
+
+Deep copy — total independence. The nested list is a new object, so mutating it leaves the original alone:
+
+```python
+original = [1, [2, 3]]
+deep_copied = copy.deepcopy(original)
+deep_copied[1][0] = "Z"
+# original     -> [1, [2, 3]]         safe
+# deep_copied  -> [1, ["Z", 3]]
+```
 
 **Tuples:** `point = (2, 3)`; a single-element tuple is `(2,)`. Tuple slots cannot be reassigned, but a contained mutable object can still change. A tuple can be a dict key/set element only if all its elements are hashable.
 
 ## 8. Sets
 
-Sets store distinct hashable elements. They have no positional indexing or guaranteed iteration order.
+A set stores only unique, hashable elements. It has no positional indexing. Iteration order is not guaranteed.
 
 ```python
-seen = set()             # {} creates a dict!
+values = [1, 2, 2, 3, 3, 4]
+unique = set(values)        # {1, 2, 3, 4} — duplicates removed
+seen = set()                # {} creates a dict!
 seen.add(3)
-seen.update([3, 4])       # {3, 4}
-exists = 3 in seen
-seen.discard(9)          # no error if absent
-seen.remove(3)           # KeyError if absent
-
-{1, 2} | {2, 3}          # union: {1, 2, 3}
-{1, 2} & {2, 3}          # intersection: {2}
-{1, 2} - {2, 3}          # difference: {1}
-{1, 2} ^ {2, 3}          # symmetric difference: {1, 3}
-{1} <= {1, 2}            # subset: True
+seen.update([3, 4])         # {3, 4}
+exists = 3 in seen          # True — average O(1)
 ```
 
+- Automatically removes duplicates.
+- Mutable: you can add or remove elements.
+- Only hashable elements are allowed: integers, strings, and tuples of hashable values. Lists, dicts, and sets are not.
 - Typical uses: membership, duplicate detection, visited nodes.
-- Lists, dicts, and sets are unhashable. Strings, integers, and tuples of hashable values are suitable elements.
-- `set(values)` removes duplicates but does not preserve sequence order. `frozenset` is immutable and hashable.
+
+**Order is not guaranteed.** You may see `{1, 2, 3}` for `[3, 1, 2, 3, 1]`, but do not rely on that.
+
+To remove duplicates **and** keep first-seen order, use a dict (insertion order is preserved in Python 3.7+):
+
+```python
+values = [3, 1, 2, 3, 1]
+unique = list(dict.fromkeys(values))    # [3, 1, 2]
+```
+
+### Set operations
+
+```python
+A, B = {1, 2, 3, 4}, {3, 4, 5, 6}
+A | B                   # union: {1, 2, 3, 4, 5, 6}
+A & B                   # intersection: {3, 4}
+A - B                   # difference: {1, 2}
+A ^ B                   # symmetric difference: {1, 2, 5, 6}
+A <= B                  # subset: False
+```
+
+The same operations exist as methods: `A.union(B)`, `A.intersection(B)`, `A.difference(B)`, `A.symmetric_difference(B)`. Methods accept any iterable; the operators require a set.
+
+| Operation | Meaning | Result for A, B above |
+|---|---|---|
+| Union | All unique elements | `{1, 2, 3, 4, 5, 6}` |
+| Intersection | Shared elements | `{3, 4}` |
+| Difference | Only in A | `{1, 2}` |
+| Symmetric difference | In either, but not both | `{1, 2, 5, 6}` |
+
+```python
+s = {1, 2, 3}
+s.add(4)                # {1, 2, 3, 4}
+s.remove(2)             # {1, 3, 4}; KeyError if missing
+s.discard(10)           # no error if absent
+```
+
+**Trap:** `remove(x)` raises `KeyError` when `x` is missing. `discard(x)` does nothing.
+
+### `frozenset` — immutable set
+
+A `frozenset` cannot be modified after creation. Union and intersection still work; they return a new set rather than mutating.
+
+```python
+s = frozenset([1, 2, 2, 3])     # frozenset({1, 2, 3})
+# s.add(4)                      # AttributeError
+```
+
+Hashable means the hash value stays stable for the object's lifetime, so it can be a dict key or set element. A normal set is mutable, so it is unhashable. A `frozenset` is hashable when its elements are hashable.
+
+```python
+locations = {frozenset(["Toronto", "Ottawa"]): "Ontario"}   # works
+# locations = {{"Toronto", "Ottawa"}: "Ontario"}            # TypeError
+```
+
+`frozenset` is useful when order does not matter, such as undirected graph edges:
+
+```python
+connections = {
+    frozenset(["A", "B"]),
+    frozenset(["B", "A"]),     # same as frozenset(["A", "B"])
+    frozenset(["B", "C"]),
+}
+len(connections)               # 2
+```
+
+### set vs frozenset vs list vs tuple
+
+| Property | list | tuple | set | frozenset |
+|---|---|---|---|---|
+| Preserves order | Yes | Yes | No guarantee | No guarantee |
+| Allows duplicates | Yes | Yes | No | No |
+| Mutable | Yes | No | Yes | No |
+| Indexing `[0]` | Yes | Yes | No | No |
+| Hashable | No | If elements are | No | If elements are |
+| Membership | O(n) | O(n) | Average O(1) | Average O(1) |
+
+### Interview patterns
+
+Detect duplicates — average O(n):
+
+```python
+def contains_duplicate(nums):
+    return len(nums) != len(set(nums))
+
+contains_duplicate([1, 2, 3, 2])    # True
+```
+
+Common elements — average O(n + m):
+
+```python
+a, b = [1, 2, 3, 4], [3, 4, 5]
+common = set(a) & set(b)            # {3, 4}
+```
+
+Repeated membership: convert the haystack to a set first. `30 in [10, 20, 30, 40]` is O(n); `30 in {10, 20, 30, 40}` is average O(1).
+
+| Concept | Remember |
+|---|---|
+| `set(values)` | Duplicates removed; order not guaranteed |
+| `list(dict.fromkeys(values))` | Deduplicate, keep first-seen order |
+| `frozenset(values)` | Immutable, hashable set |
+| `x in s` | Average O(1) |
+| `s.add` / `s.remove` / `s.discard` | `remove` errors if missing |
+| Union / intersection / difference / symmetric difference | `A.union(B)`, `A.intersection(B)`, `A.difference(B)`, `A.symmetric_difference(B)` |
+| `A <= B` | A is a subset of B |
+
+Use a set when uniqueness and fast membership matter more than order.
 
 ## 9. Dictionaries
 
@@ -337,13 +598,15 @@ Hashing/comparing long keys adds work; do not assume a newly created long string
 
 You should be able to explain these without looking them up:
 
-- Assignment versus mutation versus shallow copying.
+- Assignment versus mutation versus shallow copying versus `deepcopy`.
 - Equality versus identity; truthiness versus checking for `None`.
 - Floor division with negatives and short-circuit evaluation.
 - Return values, local scope, and the mutable-default pitfall.
 - Exclusive slice/range bounds and safe reverse iteration.
+- `enumerate` vs `zip`, and `enumerate(zip(...))` unpacking.
 - `append` versus `extend`; `sort` versus `sorted`.
 - Hashability, dictionary membership, and missing-key handling.
+- `set` vs `frozenset`, `remove` vs `discard`, and `list(dict.fromkeys(...))` for ordered uniques.
 - Why list membership and front removal can make an otherwise simple algorithm slow.
 
 Next bridge topics: Big-O, recursion/call stacks, `deque`, `heapq`, `bisect`, and small node classes. These belong to the DSA phase rather than this basics revision.
