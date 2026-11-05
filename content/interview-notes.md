@@ -279,26 +279,50 @@ counts.get("z", 0)          # 0; does not insert
 # counts["z"]               # KeyError
 ```
 
-**`defaultdict`** inserts a default when a missing key is read.
-
-```python
-from collections import defaultdict
-
-groups = defaultdict(list)
-groups["a"].append(1)       # groups["a"] is [1]
-freq = defaultdict(int)
-freq["a"] += 1              # 1
-```
-
-**`Counter`** counts hashable items. Missing keys read as `0` and are not inserted by that read.
+**`Counter`** counts an iterable automatically. Missing keys read as `0` and are not inserted.
 
 ```python
 from collections import Counter
 
-freq = Counter("banana")    # {'b': 1, 'a': 3, 'n': 2}
+freq = Counter("banana")    # Counter({'a': 3, 'n': 2, 'b': 1})
+freq["z"]                   # 0 — not a KeyError, and not inserted
 freq.most_common(1)         # [('a', 3)]
-freq["z"]                   # 0
+freq.update("aaa")
+freq["a"]                   # 6
+Counter([1, 2, 2, 3, 3, 3]) # Counter({3: 3, 2: 2, 1: 1})
+
+def is_anagram(s, t):
+    return Counter(s) == Counter(t)
 ```
+
+**`defaultdict`** creates and stores a default on missing-key access with `[]`. `d["a"].append(0)` on a normal dict is `KeyError`.
+
+```python
+from collections import defaultdict
+
+positions = defaultdict(list)
+for i, ch in enumerate("banana"):
+    positions[ch].append(i)
+# {'b': [0], 'a': [1, 3, 5], 'n': [2, 4]}
+
+freq = defaultdict(int)
+for ch in "banana":
+    freq[ch] += 1           # missing key starts at 0
+
+graph = defaultdict(set)
+for u, v in [("A", "B"), ("A", "C"), ("A", "B")]:
+    graph[u].add(v)
+# {'A': {'B', 'C'}}
+```
+
+`[]` inserts the default; `.get()` does not: `defaultdict(list).get("x")` is `None`.
+
+| Need | Use |
+|---|---|
+| Frequency of an iterable | `Counter` |
+| Count while looping | `defaultdict(int)` or `Counter` |
+| Group into lists | `defaultdict(list)` |
+| Unique neighbors / edges | `defaultdict(set)` |
 
 **Dict comprehension and items:**
 
@@ -486,7 +510,7 @@ You should be able to explain these without looking them up:
 - Why `pop(0)` is the wrong queue, and when to use `deque`.
 - Independent 2-D rows vs `[row] * n`, and 4-direction bounds checks.
 - Shallow vs deep copy on `original = [1, [2, 3]]`.
-- `defaultdict`, `Counter`, tuple keys, `set` vs `frozenset`, and `list(dict.fromkeys(...))`.
+- `Counter` vs `defaultdict` vs `dict` (`[]` inserts on defaultdict, returns 0 on Counter), tuple keys, `set` vs `frozenset`, and `list(dict.fromkeys(...))`.
 - Min-heap vs negated max-heap, `heapify`, and a size-k heap for top-k.
 - `bisect` as the stdlib stand-in for a sorted map/set.
 

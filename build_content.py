@@ -67,8 +67,8 @@ def lessons_from(path, prefix, minutes, track):
         })
     return out
 
-lessons = lessons_from(root/'content/python-notes.md', '', [8,8,10,6,12,10,14,12,10,5,7,6,3], 'python')
-lessons += lessons_from(root/'content/interview-notes.md', 'i', [10,8,12,8,8,12,12,8,5,3], 'interview')
+lessons = lessons_from(root/'content/python-notes.md', '', [8,8,10,6,12,10,14,12,14,5,7,6,3], 'python')
+lessons += lessons_from(root/'content/interview-notes.md', 'i', [10,8,12,8,8,14,12,8,5,3], 'interview')
 (root/'dist/content.js').write_text('const LESSONS = '+json.dumps(lessons)+';\nconst SCHEDULE = '+json.dumps(render((root/'content/schedule.md').read_text()))+';\n')
 shutil.copy(root/'content/python-notes.md',root/'dist/python-notes.md')
 shutil.copy(root/'content/interview-notes.md',root/'dist/interview-notes.md')

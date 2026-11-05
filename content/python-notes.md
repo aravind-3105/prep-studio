@@ -519,17 +519,118 @@ counts.pop("missing", None)  # default avoids KeyError
 - Do not change dict size while iterating over it.
 - `True` and `1` compare equal and have the same hash, so they represent the same dictionary key.
 
-Useful interview additions:
+**Trap:** `d.get(key)` returning `None` cannot distinguish a missing key from a stored `None`. Use `key in d` when that distinction matters.
+
+### `Counter` — automatic frequency counting
+
+`Counter` counts how often hashable items appear. It can take a string, list, or other iterable.
 
 ```python
-from collections import Counter, defaultdict
+from collections import Counter
 
-freq = Counter("banana")         # a:3, n:2, b:1; missing count is 0
-positions = defaultdict(list)
-positions["a"].append(0)          # indexing missing key creates its list
+word = "banana"
+freq = {}
+for char in word:
+    freq[char] = freq.get(char, 0) + 1
+# {'b': 1, 'a': 3, 'n': 2}
+
+freq = Counter("banana")
+# Counter({'a': 3, 'n': 2, 'b': 1})
 ```
 
-**Trap:** `d.get(key)` returning `None` cannot distinguish a missing key from a stored `None`. Use `key in d` when that distinction matters.
+| Character | Count |
+|---|---|
+| `a` | 3 |
+| `n` | 2 |
+| `b` | 1 |
+
+```python
+freq["a"]               # 3
+freq["z"]               # 0 — missing key; does not insert
+freq.most_common(2)     # [('a', 3), ('n', 2)]
+freq.update("aaa")
+freq["a"]               # 6
+```
+
+A regular dict raises `KeyError` on `d["z"]`. `Counter` returns `0` and does **not** insert the key.
+
+```python
+nums = [1, 2, 2, 3, 3, 3]
+Counter(nums)           # Counter({3: 3, 2: 2, 1: 1})
+```
+
+Valid anagram — same frequencies, average O(n + m):
+
+```python
+def is_anagram(s, t):
+    return Counter(s) == Counter(t)
+
+is_anagram("listen", "silent")  # True
+is_anagram("hello", "world")    # False
+```
+
+### `defaultdict` — initialize missing keys
+
+`d["a"].append(0)` on a normal dict raises `KeyError` because `"a"` does not exist yet. A `defaultdict` creates the default, stores it, then continues.
+
+```python
+from collections import defaultdict
+
+positions = defaultdict(list)
+positions["a"].append(0)
+# defaultdict(<class 'list'>, {'a': [0]})
+```
+
+What happens on `positions["a"].append(0)` when `"a"` is missing:
+
+- Python checks whether `"a"` exists.
+- It does not.
+- `defaultdict(list)` calls `list()`, which creates `[]`.
+- It stores `"a": []`.
+- `.append(0)` adds `0`.
+
+| Constructor | Default | Common use |
+|---|---|---|
+| `defaultdict(list)` | `[]` | Group elements |
+| `defaultdict(int)` | `0` | Count frequencies |
+| `defaultdict(set)` | `set()` | Unique grouped values |
+| `defaultdict(float)` | `0.0` | Numeric accumulation |
+
+```python
+freq = defaultdict(int)
+for char in "banana":
+    freq[char] += 1             # missing key starts at 0
+
+positions = defaultdict(list)
+for i, char in enumerate("banana"):
+    positions[char].append(i)
+# {'b': [0], 'a': [1, 3, 5], 'n': [2, 4]}
+
+edges = [("A", "B"), ("A", "C"), ("A", "B")]
+graph = defaultdict(set)
+for u, v in edges:
+    graph[u].add(v)
+# {'A': {'B', 'C'}} — duplicate edge stored once
+```
+
+`[]` on a missing `defaultdict` key **inserts** the default. `.get()` does not:
+
+```python
+d = defaultdict(list)
+d.get("missing")        # None — list is not created
+d["missing"]            # [] — created and stored
+```
+
+| Feature | dict | defaultdict | Counter |
+|---|---|---|---|
+| Missing key with `[]` | `KeyError` | Creates default | Returns 0 |
+| Counts an iterable automatically | No | No | Yes |
+| Groups into lists | Manual | Easy | Not the job |
+| `most_common()` | No | No | Yes |
+
+Interview rule: frequencies → `Counter`; grouping → `defaultdict(list)`; counting in a loop → `defaultdict(int)` or `Counter`; unique neighbors → `defaultdict(set)`. Lookups and updates are average O(1).
+
+Other `collections` tools you will meet: `deque` (both ends), `namedtuple` (named fields), `ChainMap` (layered lookup). For interviews, `Counter`, `defaultdict`, and `deque` matter most.
 
 ## 10. Reading stdin
 
@@ -606,6 +707,7 @@ You should be able to explain these without looking them up:
 - `enumerate` vs `zip`, and `enumerate(zip(...))` unpacking.
 - `append` versus `extend`; `sort` versus `sorted`.
 - Hashability, dictionary membership, and missing-key handling.
+- `Counter` vs `defaultdict` vs `dict`, including `[]` vs `.get()`.
 - `set` vs `frozenset`, `remove` vs `discard`, and `list(dict.fromkeys(...))` for ordered uniques.
 - Why list membership and front removal can make an otherwise simple algorithm slow.
 
