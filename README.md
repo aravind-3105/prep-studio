@@ -43,4 +43,4 @@ Python revision is available now. DSA phases are outlined in the roadmap; detail
 
 ## Repository privacy
 
-The intended repository is private and personal. Site hosting metadata, environment files, and progress exports are excluded by `.gitignore`. Creating this repository does not publish a website or enable GitHub Pages.
+The intended repository is private and personal. Site hosting metadata, environment files, and progress exports are excluded by `.gitignore`. GitHub Pages deployment is defined in `.github/workflows/pages.yml`. Once Pages is enabled with GitHub Actions as its source, pushes to `main` rebuild, check, and publish `dist/`. The published study content is accessible to site visitors; personal progress and notes remain in each visitor's browser.
