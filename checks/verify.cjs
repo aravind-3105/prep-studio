@@ -42,6 +42,7 @@ run("sheetQuery='';sheetTrack='all';location.hash='#sheet/1';render()");assert.m
 run("filter='all';query='';location.hash='#dsa';render()");assert.match(elements.get('#main').innerHTML,/RAM/);
 run("location.hash='#dsa/d1';render()");assert.match(elements.get('#main').innerHTML,/base \+ i \* size|address of index/);
 assert.match(elements.get('#main').innerHTML,/data-sheet="d1"/);
+run("location.hash='#dsa/d8';render()");assert.match(elements.get('#main').innerHTML,/functools|@cache|memoization/i);
 run("location.hash='#dsa/d11';render()");assert.match(elements.get('#main').innerHTML,/Lomuto|partition/);
 run("location.hash='#dsa/d14';render()");assert.match(elements.get('#main').innerHTML,/bisect_left/);
 run("location.hash='#dsa/d17';render()");assert.match(elements.get('#main').innerHTML,/successor|inorder/);

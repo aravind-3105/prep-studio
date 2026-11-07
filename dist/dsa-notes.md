@@ -704,6 +704,8 @@ Default recursion limit is around 1000 (`sys.getrecursionlimit()`). `fact(2000)`
 
 ### Fibonacci, and why the naive tree explodes
 
+`0, 1, 1, 2, 3, 5, 8, 13, 21, …` — each term is the sum of the previous two. `F(0) = 0`, `F(1) = 1`, `F(n) = F(n-1) + F(n-2)`.
+
 ```python
 def fib(n):
     if n <= 1:
@@ -711,25 +713,25 @@ def fib(n):
     return fib(n - 1) + fib(n - 2)
 ```
 
-`fib(5)` is not a chain. It is a tree. `fib(3)` is computed more than once:
+Factorial was a **chain**. Fibonacci is a **tree**. `fib(4)`:
 
 ```
-                    fib(5)
-                 /           \
-            fib(4)           fib(3)
-           /     \           /    \
-       fib(3)   fib(2)   fib(2)  fib(1)
-       /   \     /  \
-   fib(2) fib(1) …
+              fib(4)
+             /      \
+        fib(3)      fib(2)
+        /    \      /    \
+    fib(2) fib(1) fib(1) fib(0)
+    /    \
+fib(1) fib(0)
 ```
 
-`T(n) = T(n-1) + T(n-2) + O(1)` solves to Θ(φ^n), φ ≈ 1.618. That is exponential. `fib(40)` is already painful. Time is not “O(n) because we go down to 0.”
+`fib(2)` runs **twice**. `fib(3)` would run twice if you went to `fib(5)`. The same subproblem is not shared; each call starts from scratch.
 
-Count the work: every call does O(1) besides its children, and there are exponentially many calls.
+`T(n) = T(n-1) + T(n-2) + O(1)` is Θ(φ^n), φ ≈ 1.618. Counting every function entry (including bases): `fib(4)` is 9 calls, `fib(8)` is **67** calls for the answer **21**, `fib(40)` is tens of millions. Time is not “O(n) because we go down to 0.”
 
-### Memoization — compute each n once
+### Memoization — remember the smaller answers
 
-Store answers. The tree collapses into a chain of n unique subproblems.
+Memoization stores a finished result so the next call with the same argument returns it. Recursion still breaks the problem down; the dict is a notebook.
 
 ```python
 def fib(n, memo=None):
@@ -737,16 +739,77 @@ def fib(n, memo=None):
         memo = {}
     if n <= 1:
         return n
-    if n not in memo:
-        memo[n] = fib(n - 1, memo) + fib(n - 2, memo)
+    if n in memo:
+        return memo[n]                          # already known
+    memo[n] = fib(n - 1, memo) + fib(n - 2, memo)
     return memo[n]
 ```
 
-Time O(n), extra space O(n) for the dict *and* the call stack. This is 1-D DP; you will see the table form in a later section.
+`if n in memo` is the cache hit. Otherwise compute once, write `memo[n]`, return it. Pass the **same** dict into both recursive calls so they share the notebook.
 
-**Trap:** `def fib(n, memo={})` uses a mutable default. That dict is shared across calls. Use `None` and create the dict inside, same rule as the functions lesson.
+Same `fib(8) = 21`, but **15** function entries instead of 67 (every `k` from 0 to 8, plus the cache-hit calls of the form `fib(k-2)` after `fib(k-1)` already filled it). Each distinct `n` is computed at most once, so time is O(n). Extra space is O(n) for the dict **and** O(n) call-stack depth.
 
-Iterative bottom-up, O(1) extra space besides the output:
+| n | Result | Plain calls | Memo calls |
+|---|---|---|---|
+| 4 | 3 | 9 | 7 |
+| 8 | 21 | 67 | 15 |
+| 10 | 55 | 177 | 19 |
+
+Plain recursion grows explosively. Memoization grows linearly with n.
+
+**Trap:** `def fib(n, memo={})` shares one dict across **unrelated** top-level calls. Use `None` and create `{}` inside, same mutable-default rule as the functions lesson.
+
+### Recursion and memoization are not alternatives
+
+| | Recursion | Memoization |
+|---|---|---|
+| What it is | A function calling itself | Storing a computed result |
+| Purpose | Smaller subproblems | Skip work you already did |
+| Memory | Call stack | A cache, usually a dict |
+| Speed | Slow if work repeats | Fast when subproblems overlap |
+
+You can have recursion without a cache (factorial, tree DFS). Recursion **with** a cache (Fibonacci). A cache without recursion (the bottom-up table below). Do not say “use memoization instead of recursion.” Say whether the recursive tree **repeats** work.
+
+### `@cache` — the interview shortcut
+
+Python 3.9+ remembers arguments for you:
+
+```python
+from functools import cache
+
+@cache
+def fib(n):
+    if n <= 1:
+        return n
+    return fib(n - 1) + fib(n - 2)
+```
+
+Same O(n) behavior as the hand-rolled dict. On 3.8 write `@lru_cache(maxsize=None)`. Tell the interviewer you are memoizing; the decorator is allowed unless they want the dict written out.
+
+`@cache` keys on the arguments. The function must be deterministic, and arguments must be hashable (`n` is an int — fine; a list is not).
+
+### When a cache helps — and when it does not
+
+Add memoization when **the same subproblem shows up more than once**: Fibonacci, climbing stairs, “min coins for amount `a`,” path counts that re-enter the same `(i, j)`. You will see that pattern named **overlapping subproblems** in the DP lessons.
+
+Skip it when every subproblem is unique: factorial (`fact(5)` never needs `fact(5)` again), a tree walk that already has `seen`, merge sort’s disjoint halves. A cache there wastes memory and does not change the Big-O.
+
+### Bottom-up is the same math without the stack
+
+Fill a table from the bases toward `n`. That is **tabulation** / bottom-up DP. Memoized recursion is **top-down** DP. Both reuse overlapping answers.
+
+```python
+def fib_table(n):
+    if n <= 1:
+        return n
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    for i in range(2, n + 1):
+        dp[i] = dp[i - 1] + dp[i - 2]
+    return dp[n]
+```
+
+O(n) time, O(n) space. Rolling two variables is O(1) extra space:
 
 ```python
 def fib_iter(n):
@@ -764,12 +827,12 @@ def fib_iter(n):
 
 - Base case: what is the smallest input, and what does it return?
 - Recursive case: how is the input smaller, and how do you combine?
-- Time: how many calls, how much work per call?
-- Space: depth of the stack, plus any extra structures.
+- Time: how many calls, how much work per call? Do subproblems repeat?
+- Space: depth of the stack, plus any cache.
 
-For `fact`, calls = n, depth = n. For naive `fib`, calls = Θ(φ^n), depth = n. For memo `fib`, calls = O(n), depth = n.
+For `fact`, calls = n, depth = n. For naive `fib`, calls = Θ(φ^n) (`fib(8)` → 67), depth = n. For memo / `@cache` `fib`, each n once (`fib(8)` → 15 entries), depth = n.
 
-**Interview rule:** recursion is a tool, not a default. Use it when the natural structure is a tree or a smaller subproblem of the same shape. If the recursion is a straight line (factorial, linear scan), a loop is simpler and will not hit `RecursionError`. If they ask for Fibonacci, give the iterative or memoized version unless they explicitly want the exponential tree.
+**Interview rule:** recursion is a tool, not a default. Use it when the natural structure is a tree or a smaller subproblem of the same shape. If the tree repeats work, add a cache (dict or `@cache`) or write the bottom-up loop. If the recursion is a straight line (factorial), a loop is simpler and will not hit `RecursionError`. If they ask for Fibonacci, give memoized or iterative unless they explicitly want the exponential tree.
 
 ## 9. Insertion sort
 
@@ -2175,7 +2238,21 @@ DP is recursion with a table. Two ingredients, both required:
 
 If you only have the first, memoize a recursive function. If you only have the second, a greedy choice might exist. DP needs both.
 
-You already solved Fibonacci that way: naive tree Θ(φ^n), memo or a loop O(n). The loop *is* 1-D DP. `dp[i]` = the answer for input `i`.
+You already solved Fibonacci that way: naive tree Θ(φ^n), memo or `@cache` (top-down), or a loop / `dp` table (bottom-up). All three that reuse answers are DP. The loop *is* 1-D tabulation. `dp[i]` = the answer for input `i`.
+
+Top-down for the same idea, using the decorator from the recursion lesson:
+
+```python
+from functools import cache
+
+@cache
+def climb(n):
+    if n <= 2:
+        return n
+    return climb(n - 1) + climb(n - 2)
+```
+
+That is legal in an interview if you say it is memoized recursion. The rest of this lesson writes the table form, because that is what people mean by “the DP array.”
 
 ### The four sentences you say before coding
 
@@ -2480,7 +2557,7 @@ You should be able to explain these without looking them up:
 - Singly list: `head`, `next`, dummy node, reverse with `prev` / `cur` / `nxt`. Delete needs the predecessor.
 - Doubly list: `prev` makes delete-given-node O(1). Tail pointer makes append O(1).
 - Queue = FIFO. Circular buffer or head+tail list, not `list.pop(0)`. `deque` is the Python choice. BFS needs a queue.
-- Recursion: base + smaller case. Factorial stack trace. Naive Fibonacci is exponential because of the duplicate tree; memo or a loop makes it O(n). Python has no tail-call optimization and a ~1000 frame limit.
+- Recursion: base + smaller case. Factorial stack trace. Naive Fibonacci is a duplicate tree (`fib(8)` → 67 calls); memo / `@cache` / a loop makes it O(n) (`fib(8)` → 15). Cache only when subproblems repeat. `memo=None`, not `memo={}`. Python has no tail-call optimization and a ~1000 frame limit.
 - Insertion sort: sorted prefix, shift right while `arr[j] > key` (strict `>` keeps it stable). O(n) on already-sorted, O(n²) otherwise, in-place.
 - Merge sort: split, merge with `<=` for stability. Always O(n log n), O(n) extra. The recursion tree has log n levels of n work.
 - Quicksort: Lomuto partition, pivot at the end, recurse on `p-1` and `p+1`. Average O(n log n), worst O(n²) when the pivot is always extreme. Not stable. Randomize the pivot.

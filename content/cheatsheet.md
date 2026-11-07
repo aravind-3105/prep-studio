@@ -291,9 +291,11 @@ The rules that matter, one card per lesson. Open a lesson for the worked example
 |---|---|
 | Two pieces | Base case + smaller recursive case |
 | Factorial | O(n) time, O(n) stack; a loop is O(1) extra |
-| Naive `fib` | Tree of duplicate calls, Θ(φ^n) |
-| Memo / loop | Each `n` once → O(n) |
-| Python | No tail-call opt; ~1000 frame limit |
+| Naive `fib` | Duplicate tree; `fib(8)` is 67 calls for 21 |
+| Memoization | Cache answers; not a replacement for recursion |
+| `fib(8)` memo | 15 calls; each `n` computed once, O(n) |
+| `@cache` | `functools.cache` (or `lru_cache`) |
+| When to cache | Only if the same subproblem repeats |
 | Mutable default | `memo=None`, not `memo={}` |
 
 ## Insertion sort {d9}
@@ -537,6 +539,8 @@ The rules that matter, one card per lesson. Open a lesson for the worked example
 | Need | Remember |
 |---|---|
 | When | Overlapping subproblems **and** optimal substructure |
+| Top-down | Memoized recursion (`@cache` / dict) |
+| Bottom-up | Fill a `dp` table / rolling variables |
 | Four sentences | State, base, transition, fill order |
 | Stairs / Fibonacci | `dp[i] = dp[i-1] + dp[i-2]` |
 | House robber | `max(skip, take + dp[i-2])` |

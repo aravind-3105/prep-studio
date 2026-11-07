@@ -69,7 +69,7 @@ def lessons_from(path, prefix, minutes, track):
 
 lessons = lessons_from(root/'content/python-notes.md', '', [8,8,12,6,12,10,14,12,14,5,12,6,3], 'python')
 lessons += lessons_from(root/'content/interview-notes.md', 'i', [18,8,12,12,8,14,16,14,5,3], 'interview')
-lessons += lessons_from(root/'content/dsa-notes.md', 'd', [12,14,14,10,16,12,14,16,14,16,16,12,12,14,14,14,16,14,12,12,16,14,14,14,14,16,14,16,14,16,16,16,14,8,4], 'dsa')
+lessons += lessons_from(root/'content/dsa-notes.md', 'd', [12,14,14,10,16,12,14,18,14,16,16,12,12,14,14,14,16,14,12,12,16,14,14,14,14,16,14,16,14,16,16,16,14,8,4], 'dsa')
 by_id={l['id']:l for l in lessons}
 sheets=[]
 for sec in re.split(r'^## ', (root/'content/cheatsheet.md').read_text(), flags=re.M)[1:]:
