@@ -67,10 +67,22 @@ def lessons_from(path, prefix, minutes, track):
         })
     return out
 
-lessons = lessons_from(root/'content/python-notes.md', '', [8,8,10,6,12,10,14,12,14,5,7,6,3], 'python')
-lessons += lessons_from(root/'content/interview-notes.md', 'i', [10,8,12,8,8,14,12,8,5,3], 'interview')
-(root/'dist/content.js').write_text('const LESSONS = '+json.dumps(lessons)+';\nconst SCHEDULE = '+json.dumps(render((root/'content/schedule.md').read_text()))+';\n')
+lessons = lessons_from(root/'content/python-notes.md', '', [8,8,12,6,12,10,14,12,14,5,12,6,3], 'python')
+lessons += lessons_from(root/'content/interview-notes.md', 'i', [18,8,12,12,8,14,16,14,5,3], 'interview')
+lessons += lessons_from(root/'content/dsa-notes.md', 'd', [12,14,14,10,16,12,14,16,14,16,16,12,12,14,14,14,16,14,12,12,16,14,14,14,14,16,14,16,14,16,16,16,14,8,4], 'dsa')
+by_id={l['id']:l for l in lessons}
+sheets=[]
+for sec in re.split(r'^## ', (root/'content/cheatsheet.md').read_text(), flags=re.M)[1:]:
+    title, body=sec.split('\n',1)
+    m=re.fullmatch(r'(.+?)\s*\{([A-Za-z0-9]+)\}', title.strip())
+    if not m: raise SystemExit(f'Cheat sheet heading needs an id: {title!r}')
+    name, lid=m.group(1), m.group(2)
+    if lid not in by_id: raise SystemExit(f'Cheat sheet id {lid!r} is not a lesson')
+    sheets.append({'id':lid,'title':name,'track':by_id[lid]['track'],'html':render(body),'text':body})
+(root/'dist/content.js').write_text('const LESSONS = '+json.dumps(lessons)+';\nconst SCHEDULE = '+json.dumps(render((root/'content/schedule.md').read_text()))+';\nconst SHEETS = '+json.dumps(sheets)+';\n')
 shutil.copy(root/'content/python-notes.md',root/'dist/python-notes.md')
 shutil.copy(root/'content/interview-notes.md',root/'dist/interview-notes.md')
+shutil.copy(root/'content/dsa-notes.md',root/'dist/dsa-notes.md')
+shutil.copy(root/'content/cheatsheet.md',root/'dist/cheatsheet.md')
 shutil.copy(root/'content/schedule.md',root/'dist/schedule.md')
-print(f'Built {len(lessons)} lesson sections.')
+print(f'Built {len(lessons)} lesson sections and {len(sheets)} cheat-sheet cards.')

@@ -115,7 +115,33 @@ How Python processes that call:
 | `101`, `"Alex"`, `"Engineer"` (no names) | `*args` — positional | `(101, "Alex", "Engineer")` — tuple |
 | `age=25`, `city="Toronto"` (named) | `**kwargs` — keyword | `{"age": 25, "city": "Toronto"}` — dictionary |
 
-`*args` must appear before `**kwargs`. `f(*values)` unpacks positional arguments; `f(**options)` unpacks keyword arguments. A small sorting key can use `lambda pair: pair[1]`.
+`*args` must appear before `**kwargs`. `f(*values)` unpacks positional arguments; `f(**options)` unpacks keyword arguments.
+
+### Lambda functions
+
+A **lambda** is an anonymous function of one expression. It returns that expression’s value. There is no `return` keyword and no multi-statement body.
+
+```python
+def square(x):
+    return x * x
+
+square = lambda x: x * x     # same idea
+square(5)                    # 25
+# syntax: lambda arguments: expression
+```
+
+Use a lambda when you need a tiny function as an argument (`sort`, `sorted`, `min`, `max`, `map`). Prefer `def` when the logic is more than one expression, or when a named function already exists.
+
+```python
+pairs = [(1, 3), (2, 1), (1, 2)]
+pairs.sort(key=lambda p: (p[0], -p[1]))   # [(1, 3), (1, 2), (2, 1)]
+words = ["pear", "fig", "apple"]
+words.sort(key=len)                       # ['fig', 'pear', 'apple'] — not lambda w: len(w)
+```
+
+`key=` sorts or selects by the value the function returns, in ascending order. The original element is what you get back — not the key. A tuple key is compared left to right. `min(vals, key=lambda v: (abs(v - x), v))` means smallest distance, then smallest `v` on a tie. Negating a numeric field (`-p[1]`) reverses that field. `key=len` passes the function; `key=len()` calls it immediately and is wrong.
+
+The interview Sorting lesson walks through the multi-key patterns in full.
 
 ## 4. Conditional statements
 
@@ -649,6 +675,65 @@ a, b = map(int, input().split())       # exactly two values required
 
 ## 11. Exception handling
 
+Exception handling lets Python recover from errors instead of stopping immediately.
+
+- `try` — attempt the risky code.
+- `except` — run only if a matching exception occurs.
+- `else` — run only if `try` finishes with no exception.
+- `finally` — run whether `try` succeeds or raises, including before a pending `return`.
+- `raise` — trigger an exception on purpose.
+
+```python
+try:
+    value = int("hello")
+    print("Conversion successful")
+except ValueError:
+    print("Invalid integer!")
+print("Program continues")
+# Invalid integer!
+# Program continues
+```
+
+`int("hello")` raises `ValueError`. Python skips the rest of `try`, runs the matching handler, then continues after the block. `int("42")` would skip `except`.
+
+| Block | When it runs |
+|---|---|
+| `try` | Always attempted first |
+| `except` | A matching exception occurred |
+| `else` | `try` completed with no exception |
+| `finally` | Success or failure, once the `try`/`except`/`else` path is leaving |
+
+```python
+def divide(a, b):
+    try:
+        result = a / b
+    except ZeroDivisionError:
+        print("Cannot divide by zero")
+    else:
+        print("Division successful")
+        return result
+    finally:
+        print("Execution finished")
+
+divide(10, 2)    # Division successful / Execution finished; returns 5.0
+divide(10, 0)    # Cannot divide by zero / Execution finished; returns None
+```
+
+An unhandled exception still runs `finally` before it leaves the function.
+
+`return 0` means the function finished and the result is `0`. `raise ValueError("Invalid input")` means it cannot finish normally. The caller can catch that and decide what to do.
+
+```python
+def validate_age(age):
+    if age < 0:
+        raise ValueError("Age cannot be negative")
+    return age
+
+# validate_age(-5)   # ValueError: Age cannot be negative
+```
+
+`except ValueError as exc` stores the exception object. `raise ValueError("Expected an integer") from exc` raises a clearer error and keeps the original as its cause (exception chaining). Bare `raise` re-raises the current exception and keeps its traceback.
+
 ```python
 def parse_integer(text):
     try:
@@ -656,26 +741,57 @@ def parse_integer(text):
     except ValueError as exc:
         raise ValueError("Expected an integer") from exc
     else:
-        return value       # runs if try succeeds
+        return value
     finally:
-        pass               # cleanup on normal return or exception
+        pass               # cleanup only; do not return here
 ```
 
-- Catch specific expected exceptions; order handlers from specific to general.
-- Use `except (ValueError, TypeError):` when handling both identically, or separate handlers for different recovery.
-- `raise` inside a handler re-raises the current exception. `raise ValueError("message")` signals invalid input.
-- Avoid swallowing errors with bare `except:` or `except Exception: pass`; this hides defects.
-- Avoid `return` in `finally`: it can override an earlier return or suppress an exception.
+Handlers are checked top to bottom; the first match wins. Put specific types before their parents (`ZeroDivisionError` before `ArithmeticError`). Use `except (ValueError, TypeError):` when both need the same recovery.
 
-| Exception | Typical trigger |
-|---|---|
-| `TypeError` | Unsupported operation/type; unhashable key |
-| `ValueError` | Correct kind of argument, invalid value; failed conversion |
-| `IndexError` | Sequence index outside bounds |
-| `KeyError` | Missing dictionary key / set removal |
-| `NameError` | Name not defined |
-| `UnboundLocalError` | Local name read before assignment |
-| `ZeroDivisionError` | Division or modulo by zero |
+```python
+def safe_divide(a, b):
+    try:
+        return a / b
+    except ZeroDivisionError:
+        return "Cannot divide by zero"
+    except TypeError:
+        return "Both inputs must be numbers"
+```
+
+**Trap:** `except Exception: pass` (or a bare `except:`) hides the defect. `except Exception:` is acceptable for logging or a last-resort recovery, not for silently ignoring errors.
+
+**Trap:** `return` in `finally` overrides an earlier return and can swallow an exception.
+
+```python
+def example():
+    try:
+        raise ValueError("Something went wrong")
+    finally:
+        return 20
+example()                  # 20 — the ValueError is gone
+```
+
+Use `finally` for cleanup (closing files, releasing locks), not for returning values.
+
+| Exception | Example | Meaning |
+|---|---|---|
+| `TypeError` | `"3" + 2` | Unsupported types or operation |
+| `ValueError` | `int("abc")` | Right type, invalid value |
+| `IndexError` | `[1, 2][5]` | Sequence index out of range |
+| `KeyError` | `{"a": 1}["b"]` | Missing dict key or `set.remove` |
+| `NameError` | `print(x)` when `x` is undefined | Name not defined |
+| `UnboundLocalError` | Read a local name before assignment | Local used before it exists |
+| `ZeroDivisionError` | `10 / 0` | Division or modulo by zero |
+| `AttributeError` | `"abc".append(1)` | No such attribute or method |
+| `FileNotFoundError` | `open("missing.txt")` | Path does not exist |
+| `PermissionError` | Open a protected file | Insufficient permissions |
+| `ImportError` | `import missing_module` | Import failed |
+| `ModuleNotFoundError` | Same, module absent | Subclass of `ImportError` |
+| `StopIteration` | `next()` on an exhausted iterator | Iteration is finished |
+| `RecursionError` | Unbounded recursion | Call stack too deep |
+| `AssertionError` | `assert False` | Failed assertion |
+
+Catch errors you can handle. Otherwise let them propagate. In interviews, prefer specific handlers and a clear `raise` for invalid input.
 
 ## 12. Costs to remember before DSA
 
@@ -702,7 +818,7 @@ You should be able to explain these without looking them up:
 - Assignment versus mutation versus shallow copying versus `deepcopy`.
 - Equality versus identity; truthiness versus checking for `None`.
 - Floor division with negatives and short-circuit evaluation.
-- Return values, local scope, and the mutable-default pitfall.
+- Return values, local scope, the mutable-default pitfall, and `lambda` as a `key=` function.
 - Exclusive slice/range bounds and safe reverse iteration.
 - `enumerate` vs `zip`, and `enumerate(zip(...))` unpacking.
 - `append` versus `extend`; `sort` versus `sorted`.
@@ -710,5 +826,6 @@ You should be able to explain these without looking them up:
 - `Counter` vs `defaultdict` vs `dict`, including `[]` vs `.get()`.
 - `set` vs `frozenset`, `remove` vs `discard`, and `list(dict.fromkeys(...))` for ordered uniques.
 - Why list membership and front removal can make an otherwise simple algorithm slow.
+- `try`/`except`/`else`/`finally`, `raise` vs `return`, and why `return` in `finally` is unsafe.
 
 Next bridge topics: Big-O, recursion/call stacks, `deque`, `heapq`, `bisect`, and small node classes. These belong to the DSA phase rather than this basics revision.

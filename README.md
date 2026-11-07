@@ -14,7 +14,8 @@ Then open http://localhost:8000.
 
 ## Features
 
-- 13 searchable Python fundamentals sections and 10 Python-for-interviews sections, with worked examples and interview traps.
+- 13 searchable Python fundamentals sections, 10 Python-for-interviews sections, and 35 algorithms/data-structures sections (full NeetCode beginners course), with worked examples and interview traps.
+- A cheat sheet tab with one compact Need/Remember card per topic, plus a jump list and a link from each lesson.
 - Revision progress, saved topics, and personal notes per topic.
 - A six-week roadmap with session checkboxes.
 - Optional reveal-and-explain recall cards.
@@ -25,7 +26,7 @@ Progress and the theme choice stay in localStorage in your browser. Local and ho
 
 ## Edit and rebuild
 
-Edit lesson content in `content/python-notes.md` and `content/interview-notes.md`, and the schedule in `content/schedule.md`. Edit the interface in `dist/index.html`, `dist/style.css`, and `dist/app.js`.
+Edit lesson content in `content/python-notes.md`, `content/interview-notes.md`, and `content/dsa-notes.md`, the cheat sheet in `content/cheatsheet.md`, and the schedule in `content/schedule.md`. Edit the interface in `dist/index.html`, `dist/style.css`, and `dist/app.js`. Cheat sheet headings use `## Title {lesson-id}` so each card links back to its lesson.
 
 ```sh
 python3 build.py
@@ -39,7 +40,7 @@ Python 3 and Node.js are only needed to rebuild and run the checks. The Markdown
 
 ## Scope
 
-Python fundamentals and Python-for-interviews revision are available now. DSA problem practice, coding exercises, and a code runner are future additions.
+Python fundamentals, Python-for-interviews tools, and the full NeetCode beginners DSA notes (arrays through DP and bits) are available now. Problem practice, coding exercises, and a code runner are still to come.
 
 ## Repository privacy
 

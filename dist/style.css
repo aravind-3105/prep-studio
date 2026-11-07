@@ -43,3 +43,11 @@ html[data-theme="dark"] .recall-card{box-shadow:0 8px 32px #00000055}
 html[data-theme="dark"] footer{color:#7a8a82;border-top-color:var(--border)}
 html[data-theme="dark"] .backup{color:var(--muted)}
 html[data-theme="dark"] #theme[aria-pressed="true"]{color:#d4e8c8}
+.sheet-jump{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 22px}
+.sheet-jump button{font-size:11px;padding:5px 10px}
+.sheet-card{margin-bottom:16px;scroll-margin-top:20px}
+.sheet-card.current{border-color:#a6c6b3;box-shadow:0 0 0 1px #a6c6b3}
+.sheet-card .panel-head h3{display:flex;align-items:center;gap:10px;font-size:14px}
+.sheet-card .prose{padding:4px 22px 10px}
+html[data-theme="dark"] .sheet-card.current{border-color:#3d6a54;box-shadow:0 0 0 1px #3d6a54}
+@media print{.search,.filters,.sheet-jump,.sheet-card .text-link{display:none!important}.sheet-card{break-inside:avoid}}

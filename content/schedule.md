@@ -24,15 +24,15 @@ After that checklist, revise **Python for coding interviews** — the standard-l
 
 ## Weeks 2–6 — DSA progression
 
-The following is the roadmap; detailed notes and question selection come after the Python revision. Within each topic, revise the concept and implementation first, then introduce practice.
+The following is the roadmap. Arrays, linked lists, stacks, queues, and recursion now have detailed notes in the Data structures tab (NeetCode beginners course, first three sections). Within each topic, revise the concept and implementation first, then introduce practice.
 
 | Week | Fundamentals to revise | Practice phase, when ready |
 |---|---|---|
-| 2 | Interview Python tools, then Big-O, arrays/strings, hash maps/sets, sorting, prefix sums | Arrays/hashing, two pointers, sliding windows |
-| 3 | Stack, queue/`deque`, linked lists, binary search and boundaries | Stack problems, linked-list operations, binary search |
-| 4 | Recursion and call stack; tree traversals; BSTs; heaps/priority queues | DFS/BFS on trees, BST operations, top-k |
-| 5 | Graph representations; visited sets; BFS/DFS; backtracking; topological sorting | Grid/graph traversal, subsets/permutations, dependencies |
-| 6 | Intervals and greedy reasoning; DP states/transitions/base cases; basic bit operations | Introductory 1D/2D DP, mixed review, mock interviews |
+| 2 | Interview Python tools, then RAM/arrays, dynamic-array growth, stacks | Arrays/hashing, two pointers, sliding windows |
+| 3 | Linked lists, queues, sorting implementations, binary search and `bisect` bounds | Stack problems, linked-list operations, binary search |
+| 4 | Trees, BST insert/delete, DFS/BFS, backtracking; then heaps | DFS/BFS on trees, BST operations, top-k |
+| 5 | Hash tables, then graphs: matrix DFS/BFS, adjacency lists, Kahn topo | Grid/graph traversal, subsets/permutations, dependencies |
+| 6 | 1-D / 2-D DP (state, base, transition, order) and bit identities; then mocks | Introductory DP problems, mixed review, mock interviews |
 
 For a five-day DSA week: days 1–2 cover concepts and worked implementations, days 3–4 cover selected problems, day 5 revisits mistakes and mixes earlier topics. Day 6 is light recall; day 7 is a buffer. Week 6 should reserve two sessions for mocks. Treat this as an initial pass, not a guarantee of mastery; extend weak topics as needed.
 

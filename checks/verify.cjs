@@ -2,10 +2,10 @@ const {readFileSync}=require('node:fs');
 const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const elements=new Map();
-function element(){return {innerHTML:'',textContent:'',value:'',style:{},classList:{toggle(){}},dataset:{},setAttribute(){}};}
+function element(){return {innerHTML:'',textContent:'',value:'',style:{},classList:{toggle(){}},dataset:{},setAttribute(){},scrollIntoView(){}};}
 const listeners={};const memory={};
 const root={dataset:{}};
-const context=vm.createContext({console,Blob,URL,setTimeout:()=>0,clearTimeout(){},confirm:()=>true,location:{hash:'#overview'},localStorage:{getItem:k=>memory[k]??null,setItem:(k,v)=>memory[k]=v},document:{documentElement:root,querySelector(s){if(!elements.has(s))elements.set(s,element());return elements.get(s);},querySelectorAll(){return [];},addEventListener:(k,f)=>listeners[k]=f,createElement:()=>({click(){}})},window:{addEventListener(){},scrollTo(){},print(){},matchMedia:()=>({matches:false,addEventListener(){}})}});
+const context=vm.createContext({console,Blob,URL,setTimeout:()=>0,clearTimeout(){},confirm:()=>true,location:{hash:'#overview'},localStorage:{getItem:k=>memory[k]??null,setItem:(k,v)=>memory[k]=v},document:{documentElement:root,querySelector(s){if(!elements.has(s))elements.set(s,element());return elements.get(s);},querySelectorAll(){return [];},getElementById(){return element();},addEventListener:(k,f)=>listeners[k]=f,createElement:()=>({click(){}})},window:{addEventListener(){},scrollTo(){},print(){},matchMedia:()=>({matches:false,addEventListener(){}})}});
 function run(s){return vm.runInContext(s,context);}
 for(const f of ['content.js','app.js'])run(readFileSync('dist/'+f,'utf8'));
 const click=script=>run(`documentClickTarget=${script};`);
@@ -13,9 +13,11 @@ context.documentClickTarget=null;
 function press(id,dataset={}){listeners.click({target:{closest:()=>({id,dataset})}});}
 assert.match(elements.get('#main').innerHTML,/Your coding comeback/);
 assert.match(elements.get('#main').innerHTML,/Python for interviews/);
-assert.equal(run('LESSONS.length'),23);
+assert.equal(run('LESSONS.length'),58);
+assert.equal(run('SHEETS.length'),54);
 assert.equal(run("inTrack('python').length"),13);
 assert.equal(run("inTrack('interview').length"),10);
+assert.equal(run("inTrack('dsa').length"),35);
 for(const id of run("LESSONS.map(l=>l.id)")){
  run(`location.hash='#learn/${id}';render()`);
  assert.match(elements.get('#main').innerHTML,/Your notes &amp; sticky points|Your notes & sticky points/);
@@ -29,7 +31,27 @@ run("filter='saved';query='';location.hash='#learn';render()");assert.match(elem
 listeners.input({target:{id:'search',value:'nonexistent-987654'}});assert.match(elements.get('#lesson-results').innerHTML,/No topics match/);
 run("filter='all';query='';location.hash='#code';render()");assert.match(elements.get('#main').innerHTML,/Sorting/);
 run("location.hash='#code/i1';render()");assert.match(elements.get('#main').innerHTML,/Timsort|sorted/);
+assert.match(elements.get('#main').innerHTML,/data-sheet="i1"/);
 press('complete');assert.equal(run("state.done.includes('i1')"),true);
+run("location.hash='#sheet';render()");assert.match(elements.get('#main').innerHTML,/The rules that matter/);
+assert.match(elements.get('#main').innerHTML,/id="sheet-1"/);
+assert.match(elements.get('#main').innerHTML,/id="sheet-i7"/);
+press('',{sheetTrack:'interview'});assert.match(elements.get('#main').innerHTML,/Sorting/);assert.ok(!elements.get('#main').innerHTML.includes('id="sheet-1"'));
+listeners.input({target:{id:'sheet-search',value:'heapify'}});assert.match(elements.get('#sheet-results').innerHTML,/heapify/);assert.ok(!elements.get('#sheet-results').innerHTML.includes('id="sheet-i1"'));
+run("sheetQuery='';sheetTrack='all';location.hash='#sheet/1';render()");assert.match(elements.get('#main').innerHTML,/sheet-card current/);
+run("filter='all';query='';location.hash='#dsa';render()");assert.match(elements.get('#main').innerHTML,/RAM/);
+run("location.hash='#dsa/d1';render()");assert.match(elements.get('#main').innerHTML,/base \+ i \* size|address of index/);
+assert.match(elements.get('#main').innerHTML,/data-sheet="d1"/);
+run("location.hash='#dsa/d11';render()");assert.match(elements.get('#main').innerHTML,/Lomuto|partition/);
+run("location.hash='#dsa/d14';render()");assert.match(elements.get('#main').innerHTML,/bisect_left/);
+run("location.hash='#dsa/d17';render()");assert.match(elements.get('#main').innerHTML,/successor|inorder/);
+run("location.hash='#dsa/d21';render()");assert.match(elements.get('#main').innerHTML,/unchoose|unmark/);
+run("location.hash='#dsa/d24';render()");assert.match(elements.get('#main').innerHTML,/last parent|heapify/);
+run("location.hash='#dsa/d26';render()");assert.match(elements.get('#main').innerHTML,/collision|chaining/);
+run("location.hash='#dsa/d28';render()");assert.match(elements.get('#main').innerHTML,/island|num_islands/);
+run("location.hash='#dsa/d30';render()");assert.match(elements.get('#main').innerHTML,/topo|indeg/);
+run("location.hash='#dsa/d31';render()");assert.match(elements.get('#main').innerHTML,/House robber|dp\[i\]/);
+run("location.hash='#dsa/d33';render()");assert.match(elements.get('#main').innerHTML,/n - 1|power of two/);
 run("location.hash='#recall';render()");assert.match(elements.get('#main').innerHTML,/Reveal explanation/);press('reveal');assert.match(elements.get('#main').innerHTML,/Both names refer/);press('know');assert.equal(run('state.known.length'),1);press('next-card');assert.equal(run('cardIndex'),1);assert.equal(run('revealed'),false);
 run("location.hash='#plan';render()");listeners.change({target:{dataset:{day:'0'}}});assert.equal(run('state.days[0]'),0);
 assert.match(elements.get('#main').innerHTML,/Python for interviews/);
@@ -42,4 +64,4 @@ for(const f of ['content.js','app.js'])vm.runInContext(readFileSync('dist/'+f,'u
 assert.equal(vm.runInContext('state.done.includes("1") && state.saved.includes("1") && state.days.includes(0)',reloaded),true);
 assert.equal(vm.runInContext('state.done.includes("i1")',reloaded),true);
 assert.equal(vm.runInContext('state.theme',reloaded),'dark');
-console.log('Verified all 23 lessons, both tracks, search/filter, completion, saved topics, escaped notes, persistence/reload, roadmap checks, recall controls, and dark mode.');
+console.log('Verified all 58 lessons, 54 cheat-sheet cards, three tracks, search/filter, completion, saved topics, escaped notes, persistence/reload, roadmap checks, recall controls, and dark mode.');
